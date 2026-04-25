@@ -269,9 +269,19 @@
  *
  *   其他外设（USART / SPI / TIM 等）挂在 APB1/APB2，总线不同，时钟寄存器也不同。
  *   常用：
- *     APB1: RCC_APB1ENR（RCC_BASE + 0x20）
- *     APB2: RCC_APB2ENR（RCC_BASE + 0x24）*/
+ *     AHB1: RCC_AHB1ENR（RCC_BASE + 0x30）
+ *     APB1: RCC_APB1ENR（RCC_BASE + 0x40）
+ *     APB2: RCC_APB2ENR（RCC_BASE + 0x44）
+ */
 #define RCC_AHB1ENR       (*(volatile uint32_t *)(RCC_BASE + 0x30))
+
+/* APB1 外设时钟使能寄存器（RCC_BASE + 0x40）
+ * bit[28] PWREN：PWR 时钟使能 */
+#define RCC_APB1ENR       (*(volatile uint32_t *)(RCC_BASE + 0x40U))
+
+/* APB2 外设时钟使能寄存器（RCC_BASE + 0x44）
+ * bit[14] SYSCFGEN：SYSCFG 时钟使能 */
+#define RCC_APB2ENR       (*(volatile uint32_t *)(RCC_BASE + 0x44U))
 
 /* ================================================================
  * 第3部分：GPIO 寄存器

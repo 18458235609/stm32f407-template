@@ -9,7 +9,7 @@ CC        = $(PREFIX)gcc
 OBJCOPY   = $(PREFIX)objcopy
 OBJDUMP   = $(PREFIX)objdump
 SIZE      = $(PREFIX)size
-GDB       = $(PREFIX)gdb
+GDB       = gdb-multiarch
 OPENOCD   = openocd
 STFLY     = st-flash
 
@@ -26,7 +26,7 @@ OBJ       = $(SRC:$(SRC_DIR)/%.c=$(BUILD)/%.o)
 # ============ 编译参数 ============
 CFLAGS    = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 \
             -Wall -Wextra -ffunction-sections -fdata-sections \
-            -D$(CHIP) -DHSE_VALUE=8000000 \
+            -g -D$(CHIP) -DHSE_VALUE=8000000 \
             -I$(INC_DIR)
 LDFLAGS   = -T$(LD_FILE) \
             -Wl,-Map=$(BUILD)/$(CHIP).map,--gc-sections \
@@ -61,13 +61,15 @@ openocd: $(BUILD)/$(CHIP).elf
 
 # ============ GDB 调试 ============
 gdb: $(BUILD)/$(CHIP).elf
-	@echo "连接 OpenOCD 后在此窗口执行:"
-	@echo "  target remote localhost:3333"
-	@echo "  load"
-	@echo "  monitor reset halt"
-	@echo "  break main"
-	@echo "  continue"
-	sudo $(GDB) -ex "target remote localhost:3333" $(BUILD)/$(CHIP).elf
+	@echo "启动 OpenOCD..."
+	sudo $(OPENOCD) -f $(OOCD_IF) -f $(OOCD_TGT) &
+	@sleep 2
+	@echo "连接 GDB..."
+	sudo $(GDB) -ex "target remote localhost:3333" \
+	         -ex "load" \
+	         -ex "monitor reset halt" \
+	         -ex "break main" \
+	         $(BUILD)/$(CHIP).elf
 
 # ============ 工具 ============
 size: $(BUILD)/$(CHIP).elf
