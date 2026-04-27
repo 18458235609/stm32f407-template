@@ -30,19 +30,21 @@ CFLAGS    = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 \
             -I$(INC_DIR)
 LDFLAGS   = -T$(LD_FILE) \
             -Wl,-Map=$(BUILD)/$(CHIP).map,--gc-sections \
-            -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16
+            -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 \
+            -lc -lm -lnosys
 
 # ============ 烧录用 OpenOCD ============
 OOCD_IF   = interface/stlink.cfg
 OOCD_TGT  = target/stm32f4x.cfg
 
-.PHONY: all flash openocd gdb size clean
+.PHONY: all flash flash_only openocd gdb size clean
 
 all: $(BUILD)/$(CHIP).elf
 
 $(BUILD)/$(CHIP).elf: $(OBJ) $(LD_FILE)
 	@mkdir -p $(BUILD)
 	$(CC) $(OBJ) $(LDFLAGS) -o $@
+	$(OBJCOPY) -O binary $@ $(BUILD)/$(CHIP).bin
 	$(SIZE) $@
 
 $(BUILD)/%.o: $(SRC_DIR)/%.c | $(BUILD)
@@ -53,7 +55,11 @@ $(BUILD):
 
 # ============ 烧录 ============
 flash: $(BUILD)/$(CHIP).elf
-	sudo $(STFLY) --reset write $(BUILD)/$(CHIP).elf 0x8000000
+	$(STFLY) erase
+	$(STFLY) write $(BUILD)/$(CHIP).bin 0x8000000
+
+flash_only: $(BUILD)/$(CHIP).elf
+	$(STFLY) write $(BUILD)/$(CHIP).bin 0x8000000
 
 openocd: $(BUILD)/$(CHIP).elf
 	sudo $(OPENOCD) -f $(OOCD_IF) -f $(OOCD_TGT) \
@@ -78,7 +84,6 @@ size: $(BUILD)/$(CHIP).elf
 clean:
 	rm -rf $(BUILD)
 
-# ============ 固件信息查看 ============
 list:
 	$(OBJDUMP) -h $(BUILD)/$(CHIP).elf
 	@echo "--- .text disassembly ---"

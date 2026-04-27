@@ -1,4 +1,15 @@
-build/
-*.o
+# Build artifacts
+*.bin
 *.elf
+*.hex
 *.map
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Other
+build/
